@@ -16,6 +16,7 @@ namespace DotsWithUI
         private CellState currentPlayer = CellState.Blue;
         private const int CELL_SIZE = 20;
         private Artificial_Intelligence AI = new Artificial_Intelligence();
+        private List<PointWithPriority> points = new List<PointWithPriority>();
 
         public Form1()
         {
@@ -32,10 +33,13 @@ namespace DotsWithUI
             if (field[p] == CellState.Empty)
             {
                 field.SetPoint(p, currentPlayer);
-                AI.SetPoint(field);
+                var pToList = new PointWithPriority(xSet: p.X, ySet: p.Y);
+                points.Add(pToList);
                 //currentPlayer = Field.Inverse(currentPlayer);
                 Invalidate();
             }
+            AI.SetPoint(field, points);
+            Invalidate();
         }
         
 
