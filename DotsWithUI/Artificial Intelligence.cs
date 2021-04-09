@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Net;
 
 namespace DotsWithUI
@@ -18,6 +19,14 @@ namespace DotsWithUI
         elem.Priority = 0;
       }
     }
+
+    public int GetIndexOfNeighbor(List<PointWithPriority> neighbors, PointWithPriority point)
+    {
+      int index = neighbors.Select((item, i) => new { Item = item, Index = i })
+        .First(x => x.Item.X == point.X & x.Item.Y == point.Y).Index;
+
+      return index;
+    }
     
     /// <summary>
     /// Интерфейс для получения соседей
@@ -30,6 +39,18 @@ namespace DotsWithUI
       yield return new PointWithPriority(p.X, p.Y - 1);
       yield return new PointWithPriority(p.X + 1, p.Y);
       yield return new PointWithPriority(p.X, p.Y + 1);
+    }
+    
+    public IEnumerable<PointWithPriority> GetNeighbors8(PointWithPriority p)
+    {
+      yield return new PointWithPriority(p.X - 1, p.Y);
+      yield return new PointWithPriority(p.X - 1, p.Y - 1);
+      yield return new PointWithPriority(p.X, p.Y - 1);
+      yield return new PointWithPriority(p.X + 1, p.Y - 1);
+      yield return new PointWithPriority(p.X + 1, p.Y);
+      yield return new PointWithPriority(p.X + 1, p.Y + 1);
+      yield return new PointWithPriority(p.X, p.Y + 1);
+      yield return new PointWithPriority(p.X - 1, p.Y + 1);
     }
 
     /// <summary>
@@ -76,27 +97,32 @@ namespace DotsWithUI
     public void SetPoint(Field field, List<PointWithPriority> points)
     {
       ClearPriority(points);
-      
-      //добавляем соседей в лист чееек 
-      List<PointWithPriority> neighborsToAdd = new List<PointWithPriority>();
+
+      //добавляем соседей в лист 
+      List<PointWithPriority> neighborsList = new List<PointWithPriority>();
       foreach (var point in points)
       {
         foreach (var elemP in GetNeighbors4(p: point))
         {
-          var pToList = new PointWithPriority(elemP.X, elemP.Y);
-          neighborsToAdd.Add(pToList);
+          neighborsList.Add(elemP);
         }
       }
+      ClearPriority(neighborsList);
 
-      foreach (var point in neighborsToAdd)
+      foreach (var point in points)
       {
-        UpdateVerge(point, neighborsToAdd);
+        //обновляет количество соседей
+        UpdateVerge(point, points);
 
         //самый низкий приоритет уже использованным точкам
         foreach (var neighbor in GetNeighbors4(point))
         {
           if (points.Contains(new PointWithPriority(xSet: neighbor.X, ySet: neighbor.Y)))
-            neighbor.Priority = -100000;
+          {
+            var indexOfNeighbor = GetIndexOfNeighbor(neighborsList, neighbor);
+            neighborsList[indexOfNeighbor].Priority = -1000000;
+          }
+            
         }
         
         //если кол-во соседей равно четырем выходим
@@ -110,7 +136,8 @@ namespace DotsWithUI
           {
             if (!points.Contains(new PointWithPriority(xSet: neighbor.X, ySet: neighbor.Y)))
             {
-              point.Priority += 2 - point.Neighbors;
+              var indexOfNeighbor = GetIndexOfNeighbor(neighborsList, neighbor);
+              neighborsList[indexOfNeighbor].Priority += 2 - point.Neighbors;
             }
           }
         }
@@ -120,7 +147,8 @@ namespace DotsWithUI
           {
             if (!points.Contains(new PointWithPriority(xSet: neighbor.X, ySet: neighbor.Y)))
             {
-              point.Priority -= 50;
+              var indexOfNeighbor = GetIndexOfNeighbor(neighborsList, neighbor);
+              neighborsList[indexOfNeighbor].Priority -= 50;
             }
           }
         }
@@ -130,17 +158,16 @@ namespace DotsWithUI
           {
             if (!points.Contains(new PointWithPriority(xSet: neighbor.X, ySet: neighbor.Y)))
             {
-              point.Priority += 10000;
+              var indexOfNeighbor = GetIndexOfNeighbor(neighborsList, neighbor);
+              neighborsList[indexOfNeighbor].Priority = 10000;
             }
           }
         }
       }
 
       int x, y, p;
-      int tx, ty;
       x = y = p = -1;
-      tx = ty = -1;
-      foreach (var elem in neighborsToAdd)
+      foreach (var elem in neighborsList)
       {
         if (x == -1)
         {
@@ -151,12 +178,6 @@ namespace DotsWithUI
 
         if (elem.Priority > p)
         {
-          var pToCheck = new Point(x: x, y: y);
-          if (field[pToCheck] == CellState.Empty)
-          {
-            tx = elem.X;
-            ty = elem.Y;
-          }
           x = elem.X;
           y = elem.Y;
           p = elem.Priority;
@@ -164,22 +185,15 @@ namespace DotsWithUI
       }
       
       var pToSet = new Point((int) Math.Round(1f * x), (int) Math.Round(1f * y));
-      var pToSetRes = new Point((int) Math.Round(1f * tx), (int) Math.Round(1f * ty));
       if (field[pToSet] == CellState.Empty)
       {
         field.SetPoint(pToSet, CellState.Red);
         var addRedPoint = new PointWithPriority(pToSet.X, pToSet.Y);
         points.Add(addRedPoint);
       }
-      else if (field[pToSetRes] == CellState.Empty)
-      {
-        field.SetPoint(pToSetRes, CellState.Red);
-        var addRedPoint = new PointWithPriority(pToSetRes.X, pToSetRes.Y);
-        points.Add(addRedPoint);
-      }
       else
       {
-        foreach (var elem in GetNeighbors4(new PointWithPriority(xSet: x, ySet: y)))
+        foreach (var elem in GetNeighbors8(new PointWithPriority(xSet: x, ySet: y)))
         {
           if (field[new Point(elem.X, elem.Y)] == CellState.Empty)
           {
@@ -187,15 +201,13 @@ namespace DotsWithUI
             field.SetPoint(pToSetN, CellState.Red);
             var addRedPoint = new PointWithPriority(pToSetN.X, pToSetN.Y);
             points.Add(addRedPoint);
+            return;
           }
         }
       }
       
-
     }
-    
-    
-    
+
   }
 
   public class PointWithPriority

@@ -104,12 +104,14 @@ namespace DotsWithUI
                     return null;
                 //рекурсивно перебираем соседей
                 foreach (var n in GetNeighbors4(p))
-                    if (this[n] != myState)
+                {
+                    if (this[n] != myState) 
                         if (!visited.Contains(n))
                         {
                             visited.Add(n);
                             stack.Push(n);
                         }
+                }
             }
 
             return visited;
