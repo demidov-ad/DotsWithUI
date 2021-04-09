@@ -70,14 +70,14 @@ namespace DotsWithUI
     }
     
     /// <summary>
-    /// Ход кудахтера
+    /// ход кудахтера
     /// </summary>
     /// <param name="field"></param>
     public void SetPoint(Field field, List<PointWithPriority> points)
     {
       ClearPriority(points);
       
-      //Добавляем соседей в лист БЛЯТЬ 
+      //добавляем соседей в лист чееек 
       List<PointWithPriority> neighborsToAdd = new List<PointWithPriority>();
       foreach (var point in points)
       {

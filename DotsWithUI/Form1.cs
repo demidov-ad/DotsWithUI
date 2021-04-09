@@ -25,6 +25,11 @@ namespace DotsWithUI
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
         }
 
+        
+        /// <summary>
+        /// модификатор для OnMouseClick
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnMouseClick(MouseEventArgs e)
         {
             base.OnMouseClick(e);
@@ -43,6 +48,10 @@ namespace DotsWithUI
         }
         
 
+        /// <summary>
+        /// рисует)) 
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -91,6 +100,12 @@ namespace DotsWithUI
                 }
         }
 
+        /// <summary>
+        /// цвета точек
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="alpha"></param>
+        /// <returns></returns>
         Color StateToColor(CellState state, byte alpha = 255)
         {
             var res = state == CellState.Blue ? Color.Blue : Color.Red;

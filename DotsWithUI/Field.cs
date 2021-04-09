@@ -6,7 +6,7 @@ using System.Linq;
 namespace DotsWithUI
 {
     /// <summary>
-    /// Поле игры
+    /// поле игры 
     /// </summary>
     public class Field
     {
@@ -14,6 +14,11 @@ namespace DotsWithUI
         public CellState[,] cells = new CellState[SIZE, SIZE];
         public List<Tuple<CellState, HashSet<Point>>> TakenAreas = new List<Tuple<CellState, HashSet<Point>>>();
 
+        
+        /// <summary>
+        /// получение cell у point
+        /// </summary>
+        /// <param name="p"></param>
         public CellState this[Point p]
         {
             get
@@ -26,6 +31,12 @@ namespace DotsWithUI
             set { cells[p.X, p.Y] = value; }
         }
 
+        
+        /// <summary>
+        /// интерфейс для получения 4х соседей
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
         public IEnumerable<Point> GetNeighbors4(Point p)
         {
             yield return new Point(p.X - 1, p.Y);
@@ -34,6 +45,12 @@ namespace DotsWithUI
             yield return new Point(p.X, p.Y + 1);
         }
 
+        
+        /// <summary>
+        /// интерфейс для получения 8ми соседей
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
         public IEnumerable<Point> GetNeighbors8(Point p)
         {
             yield return new Point(p.X - 1, p.Y);
@@ -47,12 +64,14 @@ namespace DotsWithUI
         }
 
         /// <summary>
-        /// Ищем замкнутые области
+        /// ищем замкнутые области
         /// </summary>
+        /// <param name="lastPoint"></param>
+        /// <returns></returns>
         private IEnumerable<HashSet<Point>> GetClosedArea(Point lastPoint)
         {
             var myState = this[lastPoint];
-            //перебираем пустые точки в округе и пытаемся пробиться из них к краю поля
+            //перебираем пустые точки и пытаемся пробиться из них к краю поля
             foreach (var n in GetNeighbors4(lastPoint))
                 if (this[n] != myState)
                 {
@@ -64,8 +83,11 @@ namespace DotsWithUI
         }
 
         /// <summary>
-        /// Заливаем область, начиная с точки затравки, если не вышли к краю поля - возвращаем набор залитых точек
+        /// заливаем область, начиная с точки затравки, если не вышли к краю поля - возвращаем набор залитых точек
         /// </summary>
+        /// <param name="pos"></param>
+        /// <param name="myState"></param>
+        /// <returns></returns>
         private HashSet<Point> GetClosedArea(Point pos, CellState myState)
         {
             //ищем рекурсивным алгоритмом заливки
@@ -77,7 +99,7 @@ namespace DotsWithUI
             {
                 var p = stack.Pop();
                 var state = this[p];
-                //если вышли за пределы поля - значит область не замкнута, возвращаем null
+                //если вышли за пределы поля - значит область не замкнута
                 if (state == CellState.OutOfField)
                     return null;
                 //рекурсивно перебираем соседей
@@ -93,13 +115,21 @@ namespace DotsWithUI
             return visited;
         }
 
-        
+        /// <summary>
+        /// метод для игры на двоих, проверка работы филда 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
         public static CellState Inverse(CellState state)
         {
             return state == CellState.Blue ? CellState.Red : CellState.Blue;
         }
         
-
+        /// <summary>
+        /// добавление точки на поле
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <param name="state"></param>
         public void SetPoint(Point pos, CellState state)
         {
             this[pos] = state;
@@ -111,6 +141,8 @@ namespace DotsWithUI
         /// <summary>
         /// получаем контур залитой области
         /// </summary>
+        /// <param name="taken"></param>
+        /// <returns></returns>
         public IEnumerable<Point> GetContour(HashSet<Point> taken)
         {
             //ищем любую точку из контура
